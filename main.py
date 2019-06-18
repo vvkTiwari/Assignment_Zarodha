@@ -8,10 +8,9 @@ from urllib.request import urlopen
 import redis
 from datetime import datetime
 
-
-redis_host = "SG-Vivek-22108.servers.mongodirector.com"
+redis_host = "localhost"
 redis_port = 6379
-redis_password = "8aGkVs9OKyPKfG0aRS4IuuvAdrab9VXW"
+redis_password = ""
 
 class Bhavcopy(object):
 
@@ -20,7 +19,7 @@ class Bhavcopy(object):
 	try:
 		r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
 	except Exception as e:
-		print({e})
+		print(e)
 
 	def __init__(self):
 		self.upload_data(self.r)
@@ -28,7 +27,7 @@ class Bhavcopy(object):
 
 # Function to upload data to redis.
 
-	def upload_data(self, r):
+	def upload_data(self,r):
 
 		# Assuming that the BhavCopy is uploaded every weekday after 7pm.
 
@@ -36,19 +35,23 @@ class Bhavcopy(object):
 		now_utc = datetime.now(timezone('UTC'))
 		local_time = now_utc.astimezone(get_localzone()).strftime(format_accepted)
 		split_local_time = local_time.split(' ')
-		date = split_local_time[0]
+		date = split_local_time[0].split("-")
 		day = split_local_time[2]
-		date = date[0:4] + date[6:]
-		self.r.set("url", "http://www.bseindia.com/download/BhavCopy/Equity/EQ140619_CSV.ZIP")
+		Date = str(date[2])+str(date[1])+str(date[0][2:])
+		#print(Date,"fasldkfj;adsklfjkdsl")
+
+		r.set("url", "http://www.bseindia.com/download/BhavCopy/Equity/EQ180619_CSV.ZIP")
 
 		# On offdays, the previous bhavcopy will be shown.
 
 		off_days = ['Saturday','Sunday']
-		if day not in off_days and int(split_local_time.split(' ')[1]) >= 19:
-			url = "http://www.bseindia.com/download/BhavCopy/Equity/EQ"+date+"_CSV.ZIP"
+		#print(split_local_time,"fsldkfjsldkfjadskfj;lskdjf")
+		if day not in off_days and int(split_local_time[1]) >= 19:
+			url = "http://www.bseindia.com/download/BhavCopy/Equity/EQ"+Date+"_CSV.ZIP"
+			#url = "http://www.bseindia.com/download/BhavCopy/Equity/EQ"+date+"_CSV.ZIP"
 			r.set("url", url)
 		else:
-			url = self.r.get('url')
+			url = r.get('url')
 
 		resp = urlopen(url=url)
 		zipfile = ZipFile(BytesIO(resp.read()))
@@ -69,6 +72,7 @@ class Bhavcopy(object):
 
 				r.set("key"+str(i), col_append)
 				i += 1
+			#print(i,"adfkladsjflk;sdjflksdjflkd")
 		except Exception as e:
 			print(e)
 		return "success"
@@ -82,11 +86,9 @@ class Bhavcopy(object):
 			datatable = []
 			table=""
 			for i in range(11):
-
-				datatable.append(self.r.get("key"+str(i)).rstrip().split(','))
+				datatable.append(Bhavcopy.r.get("key"+str(i)).rstrip().split(','))
 			for i in range(11):
 				table = table[0:]+"<tr>"
-
 				for j in range(6):
 					if i == 0:
 						table = table[0:]+"<th>"+str(datatable[i][j])+"</th>"
@@ -111,15 +113,14 @@ class Bhavcopy(object):
 						</div>
 					</body>
 					</html>""")
-
+		
 	# Function to search the stock by its name
 
 	@cherrypy.expose()
 	def search_box(self,search_input):
 		name = search_input
-		table = ''
-		for i in range(2916):
-
+		table = ""
+		for i in range(2906):
 			vals = Bhavcopy.r.get("key" + str(i)).rstrip().split(',')
 			if i == 0:
 				table = table[0:] + "<tr>"
