@@ -8,9 +8,9 @@ from urllib.request import urlopen
 import redis
 from datetime import datetime
 
-redis_host = "localhost"
+redis_host = "SG-Vivek-22108.servers.mongodirector.com"
 redis_port = 6379
-redis_password = ""
+redis_password = "8aGkVs9OKyPKfG0aRS4IuuvAdrab9VXW"
 
 class Bhavcopy(object):
 
